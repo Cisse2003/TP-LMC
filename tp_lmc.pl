@@ -18,7 +18,7 @@ echo(_).
 % Question 1 : Implementation unifie(P)
     % Teste si la variable V apparaît dans le terme T
         occur_check(V, T) :- V == T,!.                    % cas trivial
-        occur_check(V, T) :- var(V),nonvar(T), sub_term(Z, T), Z == V,!.
+        occur_check(V, T) :- var(V), nonvar(T), sub_term(Z, T), Z == V,!.
 
 %% ----------------------------
 % Détermine la règle de transformation R qui s'applique à l'équation E
@@ -117,4 +117,46 @@ echo(_).
             reduit(R, E, Rest, S),
             unifie(S,Q);
             echo('check: '), echo(E), nl,fail).
+
+% Question 2 : Implantation des stratégies de choix d’équation pour l’unification
+    unifie(P) :- unifie(P, choix_premier).
+
+    unifie(P, Strategie) :- set_echo, unifie(P, [], Strategie).
+
+    unifie([],Q, _) :- echo(Q), nl, echo('Yes').
+
+    unifie(P, Q, Strategie) :-
+        choix(P, Q_rest, E, R, Strategie),
+        echo('system : '), echo(P), nl,
+        echo(R), echo(': '), echo(E), nl,
+        reduit(R, E, Q_rest, S),
+        unifie(S, Q, Strategie).
+
+    % Choix systématique de la première équation
+    choix(P, Q_rest, E, R, choix_premier) :-
+        P = [E|Q_rest],                                     % E = première équation
+        regle(E, R).                                        % R = règle applicable à E
+
+    % Implémentation d'une stratégie pondérée
+        % Plus le nombre est grand, plus la règle est prioritaire
+            poids(clash, 6).
+            poids(check, 6).
+            poids(rename, 5).
+            poids(simplify, 5).
+            poids(orient, 4).
+            poids(decompose, 3).
+            poids(expand, 2).
+            poids(delete, 1).
+
+        % Prédicat de choix pondéré
+            choix_pondere(P, Q_rest, E, R) :-
+                % Pour chaque equation, on calcul la règle et son poids, la fonction genere toutes les combinaisons
+                findall([Eq, R, Pds], (member(Eq, P), regle(Eq, Role), poids(Role, Pds)), L),
+                % On prend l'equation de poids maximal
+                poids_max(L, [E, R, _]),
+                select(E, P, Q_rest).    % Q_rest quotient le reste du systeme sans l'equation choisie
+
+            % poids_max(Liste, EleMax), renvoie dans EleMax l'entree de L avec le plus grand poids
+            poids_max([H], H).  % cas de base, un seul element alors c'est le max
+
 
