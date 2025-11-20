@@ -149,7 +149,7 @@ echo(_).
             poids(delete, 1).
 
         % Prédicat de choix pondéré
-            choix_pondere(P, Q_rest, E, R) :-
+            choix_pondere_i(P, Q_rest, E, R) :-
                 % Pour chaque equation, on calcul la règle et son poids, la fonction genere toutes les combinaisons
                 findall([Eq, R, Pds], (member(Eq, P), regle(Eq, Role), poids(Role, Pds)), L),
                 % On prend l'equation de poids maximal
