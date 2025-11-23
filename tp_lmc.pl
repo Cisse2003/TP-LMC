@@ -29,7 +29,7 @@ echo(_).
             regle(S ?= S, delete) :- var(S). % Pour x=x ou t=t
 
         % Si T constante et S variable : simplify
-            regle(S ?= T, simplify) :- var(S),atomic(T), S \= T.
+            regle(E, simplify) :- E = S ?= T, var(S),atomic(T), S \== T.
 
         % Si T composé et S variable, sans occurence : expand
             regle(S ?= T, expand) :- var(S), compound(T), \+ occur_check(S, T).
@@ -45,7 +45,7 @@ echo(_).
             regle(S ?= T, clash) :- compound(S), compound(T), functor(S, F1, N1), functor(T, F2, N2), ( F1 \== F2 ; N1 \== N2 ).
 
         % Si variable = composé avec occurence : check
-            regle(S ?= T, check) :- var(S), S \= T, occur_check(S, T).
+            regle(S ?= T, check) :- var(S),compound(T),  S \= T, occur_check(S, T).
 
     % Transforme le système d'équations P en le système d'équations Q par application de la règle de transformation R à l'équation E.
 
@@ -102,21 +102,21 @@ echo(_).
         pairs_to_eqs([H1|T1], [H2|T2], [H1 ?= H2|EqT]) :-
             pairs_to_eqs(T1, T2, EqT).
 
-        unifie(P) :- set_echo,
-                         unifie(P, []).
+        %unifie(P) :- set_echo,
+        %                 unifie(P, []).
 
-        unifie([],Q) :-
-            echo(Q), nl,
-            echo('Yes').
+        %unifie([],Q) :-
+        %    echo(Q), nl,
+        %    echo('Yes').
 
-        unifie(P,Q) :-
-            echo('system: '), echo(P), nl,
-            P = [E|Rest],  % Choisir la première équation E dans P
-            (regle(E, R) ->
-            echo(R), echo(': '), echo(E), nl,
-            reduit(R, E, Rest, S),
-            unifie(S,Q);
-            echo('check: '), echo(E), nl,fail).
+        %unifie(P,Q) :-
+        %    echo('system: '), echo(P), nl,
+        %    P = [E|Rest],  % Choisir la première équation E dans P
+        %    (regle(E, R) ->
+        %    echo(R), echo(': '), echo(E), nl,
+        %    reduit(R, E, Rest, S),
+        %    unifie(S,Q);
+        %    echo('check: '), echo(E), nl,fail).
 
 % Question 2 : Implantation des stratégies de choix d’équation pour l’unification
     unifie(P) :- unifie(P, choix_premier).
@@ -133,30 +133,55 @@ echo(_).
         unifie(S, Q, Strategie).
 
     % Choix systématique de la première équation
-    choix(P, Q_rest, E, R, choix_premier) :-
-        P = [E|Q_rest],                                     % E = première équation
-        regle(E, R).                                        % R = règle applicable à E
+    choix([E|Q_rest], Q_rest, E, R, choix_premier) :-
+        regle(E, R)->true;echo('check: '), echo(E), nl,fail.                                        % R = règle applicable à E
+
+    %implementation des 2 choix pondérée
+    choix(P, Q_rest, E, R, choix_pondere_1) :- choix_pondere(P, Q_rest, E, R, 1).
+    choix(P, Q_rest, E, R, choix_pondere_2) :- choix_pondere(P, Q_rest, E, R, 2).
+    choix(P, Q_rest, E, R, choix_random) :- choix_random(P, Q_rest, E, R).
 
     % Implémentation d'une stratégie pondérée
         % Plus le nombre est grand, plus la règle est prioritaire
-            poids(clash, 6).
-            poids(check, 6).
-            poids(rename, 5).
-            poids(simplify, 5).
-            poids(orient, 4).
-            poids(decompose, 3).
-            poids(expand, 2).
-            poids(delete, 1).
+            poids(1,clash, 6).
+            poids(1,check, 6).
+            poids(1,rename, 5).
+            poids(1,simplify, 5).
+            poids(1,orient, 4).
+            poids(1,decompose, 3).
+            poids(1,expand, 2).
+            poids(1,delete, 1).
+
+        % Deuxieme stratégie de choix pondérer Plus le nombre est grand, plus la règle est prioritaire
+            poids(2,simplify, 5).
+            poids(2,rename, 5).
+            poids(2,decompose, 3).
+            poids(2,orient, 4).
+            poids(2,expand, 2).
+            poids(2,clash, 6).
+            poids(2,check, 6).
+            poids(2,delete, 1).
 
         % Prédicat de choix pondéré
-            choix_pondere_i(P, Q_rest, E, R) :-
+            choix_pondere(P, Q_rest, E, R,I) :-
                 % Pour chaque equation, on calcul la règle et son poids, la fonction genere toutes les combinaisons
-                findall([Eq, R, Pds], (member(Eq, P), regle(Eq, Role), poids(Role, Pds)), L),
+                findall([Eq, Regle, Pds], (member(Eq, P),
+                regle(Eq, Regle)->true;echo('check: '), echo(Eq), nl,fail,
+                poids(I,Regle, Pds)), L),L \= [],
                 % On prend l'equation de poids maximal
                 poids_max(L, [E, R, _]),
                 select(E, P, Q_rest).    % Q_rest quotient le reste du systeme sans l'equation choisie
 
             % poids_max(Liste, EleMax), renvoie dans EleMax l'entree de L avec le plus grand poids
-            poids_max([H], H).  % cas de base, un seul element alors c'est le max
+            poids_max([H], H) :- !.  % cas de base, un seul element alors c'est le max
+            poids_max([[Eq,R,Pd]|Reste], Max) :- poids_max(Reste,nouveauMax),nouveauMax=[_,_,nouveauPd],( Pd >= nouveauPd -> Max = [Eq,R,Pd] ; Max = nouveauMax ).
 
 
+    %Autres stratégies possibles( on a implementer une stratégie random qui choisis les équation aleatoirement)
+
+
+        %implementation d'un choix ramdom
+        %la fonction random_member nous permet de choisir une equation aleatoirement dans P
+        choix_random(P, Q_rest, E, R) :- random_member(E, P),
+        regle(E, R)
+        ,select(E, P, Q_rest).
