@@ -14,6 +14,10 @@ clr_echo :- retractall(echo_on).
 echo(T) :- clause(echo_on, _), !, write(T) .
 echo(_).
 
+ligne :-
+    clause(echo_on,_), !,
+    nl.   % appel au nl standard
+ligne.
 
 % Question 1 : Implementation unifie(P)
     % Teste si la variable V apparaît dans le terme T
@@ -70,11 +74,11 @@ echo(_).
                 append(EqList, P, Q).
         % clash : on ne peut pas continuer
             reduit(clash, _, _, _) :-
-                write('Erreur : clash entre fonctions'), nl,
+                write('Erreur : clash entre fonctions'), ligne,
                 fail.
         % check : variable occurence détectée
         reduit(check, _, _, _) :-
-            write('Erreur : occur check échoué'), nl,
+            write('Erreur : occur check échoué'), ligne,
             fail.
         % remplace profondément la variable X par T dans le terme InTerm -> OutTerm
             term_subst(X, T, InTerm, OutTerm) :-
@@ -106,35 +110,36 @@ echo(_).
         %                 unifie(P, []).
 
         %unifie([],Q) :-
-        %    echo(Q), nl,
+        %    echo(Q), ligne,
         %    echo('Yes').
 
         %unifie(P,Q) :-
-        %    echo('system: '), echo(P), nl,
+        %    echo('system: '), echo(P), ligne,
         %    P = [E|Rest],  % Choisir la première équation E dans P
         %    (regle(E, R) ->
-        %    echo(R), echo(': '), echo(E), nl,
+        %    echo(R), echo(': '), echo(E), ligne,
         %    reduit(R, E, Rest, S),
         %    unifie(S,Q);
-        %    echo('check: '), echo(E), nl,fail).
+        %    echo('check: '), echo(E), ligne,fail).
 
 % Question 2 : Implantation des stratégies de choix d’équation pour l’unification
     unifie(P) :- unifie(P, choix_premier).
 
-    unifie(P, Strategie) :- set_echo, unifie(P, [], Strategie).
+    %unifie(P, Strategie) :- set_echo, unifie(P, [], Strategie).
+    unifie(P, Strategie) :- unifie(P, [], Strategie).
 
-    unifie([],Q, _) :- echo(Q), nl, echo('Yes').
+    unifie([],Q, _) :- echo(Q), ligne, echo('Yes').
 
     unifie(P, Q, Strategie) :-
         choix(P, Q_rest, E, R, Strategie),
-        echo('system : '), echo(P), nl,
-        echo(R), echo(': '), echo(E), nl,
+        echo('system : '), echo(P), ligne,
+        echo(R), echo(': '), echo(E), ligne,
         reduit(R, E, Q_rest, S),
         unifie(S, Q, Strategie).
 
     % Choix systématique de la première équation
     choix([E|Q_rest], Q_rest, E, R, choix_premier) :-
-        regle(E, R)->true;echo('check: '), echo(E), nl,fail.                                        % R = règle applicable à E
+        regle(E, R)->true;echo('check: '), echo(E), ligne,fail.                                        % R = règle applicable à E
 
     %implementation des 2 choix pondérée
     choix(P, Q_rest, E, R, choix_pondere_1) :- choix_pondere(P, Q_rest, E, R, 1).
@@ -166,7 +171,7 @@ echo(_).
             choix_pondere(P, Q_rest, E, R,I) :-
                 % Pour chaque equation, on calcul la règle et son poids, la fonction genere toutes les combinaisons
                 findall([Eq, Regle, Pds], (member(Eq, P),
-                regle(Eq, Regle)->true;echo('check: '), echo(Eq), nl,fail,
+                regle(Eq, Regle)->true;echo('check: '), echo(Eq), ligne,fail,
                 poids(I,Regle, Pds)), L),L \= [],
                 % On prend l'equation de poids maximal
                 poids_max(L, [E, R, _]),
@@ -185,3 +190,16 @@ echo(_).
         choix_random(P, Q_rest, E, R) :- random_member(E, P),
         regle(E, R)
         ,select(E, P, Q_rest).
+
+% Question 3 : Implémentation de unif et de trace_unif
+
+    % unif( P , S ) permet de faire l'unification sans afficher les traces des différents règles utiliser
+    unif(P, S) :-
+        clr_echo,               % désactiver l'affichage
+        unifie(P, S).           % appeler ta version existante
+
+    % trace_unif(P, S) permet de faire l'unification sans afficher les différents règles utiliser
+    trace_unif(P, S) :-
+        set_echo,               % activer l'affichage
+        unifie(P, S).           % appeler ta version existante
+

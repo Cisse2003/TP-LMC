@@ -3,7 +3,7 @@
 % Fonction utilitaire pour tester et afficher le résultat
 test_unification(NomTest, Systeme, Strategie, ResultatAttendu) :-
     write('=== Test: '), write(NomTest), write(' ==='), nl,
-    (   catch(unifie(Systeme, Strategie), _, fail) ->
+    (   catch(trace_unif(Systeme, Strategie), _, fail) ->
         Resultat = true
     ;   Resultat = false
     ),
