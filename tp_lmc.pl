@@ -53,14 +53,22 @@ ligne.
     % Transforme le système d'équations P en le système d'équations Q par application de la règle de transformation R à l'équation E.
 
         % delete : on enlève l'équation
-            reduit(delete, _ ?= _, P, P).        % select(X,Y,Z) supprime x dans y et mets le résultat dans z
+            reduit(delete, E, P, Q) :- select(E, P, Q).        % select supprime E dans P et mets le résultat dans Q
 
-        % rename : on peut remplacer la variable S par T partout
-            reduit(rename, S ?= T, P, Q) :- subst(S,T,P,Q).
-        % simplify : idem que rename
-            reduit(simplify, S ?= T, P, Q) :- subst(S,T,P,Q).
+        % rename : on remplace la variable S par T partout
+        reduit(rename, S ?= T, P, [S = T | Q]) :-
+            select(S ?= T, P, P1),
+            substitute(P1, S, T, Q).
 
-            reduit(expand, S ?= T, P, Q) :- subst(S, T, P, Q).
+        % simplify : même opération que rename (pour une variable ou un terme simple)
+        reduit(simplify, S ?= T, P, [S = T | Q]) :-
+            select(S ?= T, P, P1),
+            substitute(P1, S, T, Q).
+
+        % expand : substitution de X par T dans tout le problème
+        reduit(expand, X ?= T, P, [X = T | Q]) :-
+            select(X ?= T, P, P1),
+            substitute(P1, X, T, Q).
 
         % orient : échange S et T
             reduit(orient, T ?= S, P,[S ?= T | P]).
