@@ -29,20 +29,17 @@ ligne.
         % Si S et T variables : rename si différente
             regle(S ?= T, rename) :- var(S), var(T), S \== T.
 
-        % Si S et S variables  :  delete (x=x)
-            regle(S ?= S, delete) :- var(S). % Pour x=x ou t=t
-            regle(S ?= S, delete) :- atomic(S). % Pour x=x ou t=t
-
+        % Si S et T variables  :  delete (x=x)
+            regle(S ?= T, delete) :- S == T.    % Pour x = x ou t = t
 
         % Si T constante et S variable : simplify
-            regle(E, simplify) :- E = S ?= T, var(S),atomic(T), S \== T.
+            regle(S ?= T, simplify) :- var(S), atomic(T).
 
         % Si T composé et S variable, sans occurence : expand
             regle(S ?= T, expand) :- var(S), compound(T), \+ occur_check(S, T).
 
         % Si S non variables et T variable : orient
-            %regle(S ?= T, orient) :- nonvar(S), var(T).
-            regle(T ?= X, orient) :- var(X), \+ var(T).
+            regle(S ?= T, orient) :- nonvar(S), var(T).
 
         % Si même foncteur et même arité : decompose
             regle(S ?= T, decompose) :- compound(S), compound(T), functor(S, F, N), functor(T, F, N).
@@ -51,7 +48,7 @@ ligne.
             regle(S ?= T, clash) :- compound(S), compound(T), functor(S, F1, N1), functor(T, F2, N2), ( F1 \== F2 ; N1 \== N2 ).
 
         % Si variable = composé avec occurence : check
-            regle(S ?= T, check) :- var(S),compound(T),  S \= T, occur_check(S, T).
+            regle(S ?= T, check) :- var(S), compound(T), occur_check(S, T).
 
     % Transforme le système d'équations P en le système d'équations Q par application de la règle de transformation R à l'équation E.
 
@@ -141,7 +138,8 @@ ligne.
 
     % Choix systématique de la première équation
     choix([E|Q_rest], Q_rest, E, R, choix_premier) :-
-        regle(E, R)->true;echo('check: '), echo(E), ligne,fail.                                        % R = règle applicable à E
+        regle(E, R)->true;                                       % R = règle applicable à E
+        echo('check: '), echo(E), ligne,fail.
 
     %implementation des 2 choix pondérée
     choix(P, Q_rest, E, R, choix_pondere_1) :- choix_pondere(P, Q_rest, E, R, 1).
@@ -200,7 +198,7 @@ ligne.
         clr_echo,               % désactiver l'affichage
         unifie(P, S).           % appeler ta version existante
 
-    % trace_unif(P, S) permet de faire l'unification sans afficher les différents règles utiliser
+    % trace_unif(P, S) permet de faire l'unification avec affichage des différentes règles utiliser
     trace_unif(P, S) :-
         set_echo,               % activer l'affichage
         unifie(P, S).           % appeler ta version existante
