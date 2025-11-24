@@ -31,6 +31,8 @@ ligne.
 
         % Si S et S variables  :  delete (x=x)
             regle(S ?= S, delete) :- var(S). % Pour x=x ou t=t
+            regle(S ?= S, delete) :- atomic(S). % Pour x=x ou t=t
+
 
         % Si T constante et S variable : simplify
             regle(E, simplify) :- E = S ?= T, var(S),atomic(T), S \== T.
@@ -74,11 +76,11 @@ ligne.
                 append(EqList, P, Q).
         % clash : on ne peut pas continuer
             reduit(clash, _, _, _) :-
-                write('Erreur : clash entre fonctions'), ligne,
+                echo('Erreur : clash entre fonctions'), ligne,
                 fail.
         % check : variable occurence détectée
         reduit(check, _, _, _) :-
-            write('Erreur : occur check échoué'), ligne,
+            echo('Erreur : occur check échoué'), ligne,
             fail.
         % remplace profondément la variable X par T dans le terme InTerm -> OutTerm
             term_subst(X, T, InTerm, OutTerm) :-
@@ -128,7 +130,7 @@ ligne.
     %unifie(P, Strategie) :- set_echo, unifie(P, [], Strategie).
     unifie(P, Strategie) :- unifie(P, [], Strategie).
 
-    unifie([],Q, _) :- echo(Q), ligne, echo('Yes').
+    unifie([],Q, _) :- echo(Q), ligne, true.
 
     unifie(P, Q, Strategie) :-
         choix(P, Q_rest, E, R, Strategie),
