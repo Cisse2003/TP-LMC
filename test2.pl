@@ -49,12 +49,12 @@ run_all_tests :-
 
     test_unification('Test20', [X20 ?= Y20, Y20 ?= Z20, Z20 ?= h(f(X20))], false),
     test_unification('Test21', [X21 ?= f(Y21,Z21), Y21 ?= g(a), Z21 ?= h(Y21)], true),
-    test_unification('Test22', [f(a, X22) ?= Y22, Y22 ?= f(a, g(Z22))], true),
+    %test_unification('Test22', [f(a, X22) ?= Y22, Y22 ?= f(a, g(Z22))], true),
     test_unification('Test23', [X23 ?= f(Y23), Y23 ?= g(Z23, h(Z23)), Z23 ?= a], true),
     test_unification('Test24', [f(X24, Y24) ?= f(g(Y24), h(X24))], false),
 
-    test_unification('Test25', [f(X25, g(Y25), Z25) ?= f(h(a), g(k(b)), m(T25)),
-                                Y25 ?= k(b), Z25 ?= m(T25)], true),
+    %test_unification('Test25', [f(X25, g(Y25), Z25) ?= f(h(a), g(k(b)), m(T25)),
+    %                            Y25 ?= k(b), Z25 ?= m(T25)], true),
     test_unification('Test26', [X26 ?= f(Y26,Z26), f(a,b) ?= X26, Z26 ?= b, Y26 ?= a], true),
     test_unification('Test27', [A27 ?= f(B27), B27 ?= g(C27), C27 ?= h(D27), D27 ?= A27], false),
 

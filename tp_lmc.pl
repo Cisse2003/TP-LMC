@@ -51,7 +51,7 @@ ligne.
             regle(S ?= T, clash) :- compound(S), compound(T), functor(S, F1, N1), functor(T, F2, N2), ( F1 \== F2 ; N1 \== N2 ).
 
         % Si variable = composé avec occurence : check
-            regle(S ?= T, check) :- var(S),compound(T),  S \= T, occur_check(S, T).
+            regle(S ?= T, check) :- var(S),compound(T), occur_check(S, T).
 
     % Transforme le système d'équations P en le système d'équations Q par application de la règle de transformation R à l'équation E.
 
@@ -59,11 +59,11 @@ ligne.
             reduit(delete, _ ?= _, P, P).        % select(X,Y,Z) supprime x dans y et mets le résultat dans z
 
         % rename : on peut remplacer la variable S par T partout
-            reduit(rename, S ?= T, P, Q) :- subst(S,T,P,Q).
+            reduit(rename, S ?= T, P, Q) :- S=T, subst(S,T,P,Q).
         % simplify : idem que rename
-            reduit(simplify, S ?= T, P, Q) :- subst(S,T,P,Q).
+            reduit(simplify, S ?= T, P, Q) :-  S=T, subst(S,T,P,Q).
 
-            reduit(expand, S ?= T, P, Q) :- subst(S, T, P, Q).
+            reduit(expand, S ?= T, P, Q) :- S=T, subst(S, T, P, Q ).
 
         % orient : échange S et T
             reduit(orient, T ?= S, P,[S ?= T | P]).
@@ -130,7 +130,7 @@ ligne.
     %unifie(P, Strategie) :- set_echo, unifie(P, [], Strategie).
     unifie(P, Strategie) :- unifie(P, [], Strategie).
 
-    unifie([],Q, _) :- echo(Q), ligne, true.
+    unifie([],_, _) :-true.
 
     unifie(P, Q, Strategie) :-
         choix(P, Q_rest, E, R, Strategie),
