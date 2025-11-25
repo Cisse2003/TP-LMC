@@ -200,8 +200,24 @@ ligne.
         clr_echo,               % désactiver l'affichage
         unifie(P, S).           % appeler ta version existante
 
-    % trace_unif(P, S) permet de faire l'unification sans afficher les différents règles utiliser
+    % trace_unif(P, S) permet de faire l'unification avec l'affichage des différentes règles utiliser
     trace_unif(P, S) :-
         set_echo,               % activer l'affichage
         unifie(P, S).           % appeler ta version existante
 
+
+% Un petit guide pour l'utilisateur
+start :-
+    nl,
+    write('Bienvenue dans le système d\'unification Prolog !'), nl,
+    write('Voici comment l\'utiliser :'), nl,
+    write('1. Pour unifier sans afficher les étapes :'), nl,
+    write('   ?- unif([equations], Choix).'), nl,
+    write('2. Pour unifier avec trace (affiche les règles appliquées) :'), nl,
+    write('   ?- trace_unif([equations], Choix).'), nl,
+    write('3. Les stratégies de choix possibles sont : choix_premier, choix_pondere_1, choix_pondere_2, choix_random'), nl,
+    write('   Exemple avec stratégie : ?- unifie([equations], choix_pondere_1).'), nl,
+    nl.
+
+
+:- start.
