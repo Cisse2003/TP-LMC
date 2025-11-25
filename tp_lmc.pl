@@ -212,9 +212,9 @@ start :-
     write('Bienvenue dans le système d\'unification Prolog !'), nl,
     write('Voici comment l\'utiliser :'), nl,
     write('1. Pour unifier sans afficher les étapes :'), nl,
-    write('   ?- unif([equations], Choix).'), nl,
+    write('   ?- unif([equations], Strategie).'), nl,
     write('2. Pour unifier avec trace (affiche les règles appliquées) :'), nl,
-    write('   ?- trace_unif([equations], Choix).'), nl,
+    write('   ?- trace_unif([equations], Strategie).'), nl,
     write('3. Les stratégies de choix possibles sont : choix_premier, choix_pondere_1, choix_pondere_2, choix_random'), nl,
     write('   Exemple avec stratégie : ?- unifie([equations], choix_pondere_1).'), nl,
     nl.
