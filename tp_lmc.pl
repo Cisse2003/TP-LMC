@@ -29,17 +29,20 @@ ligne.
         % Si S et T variables : rename si différente
             regle(S ?= T, rename) :- var(S), var(T), S \== T.
 
-        % Si S et T variables  :  delete (x=x)
-            regle(S ?= T, delete) :- S == T.    % Pour x = x ou t = t
+        % Si S et S variables  :  delete (x=x)
+            regle(S ?= S, delete) :- var(S). % Pour x=x ou t=t
+            regle(S ?= S, delete) :- atomic(S). % Pour x=x ou t=t
+
 
         % Si T constante et S variable : simplify
-            regle(S ?= T, simplify) :- var(S), atomic(T).
+            regle(E, simplify) :- E = S ?= T, var(S),atomic(T), S \== T.
 
         % Si T composé et S variable, sans occurence : expand
             regle(S ?= T, expand) :- var(S), compound(T), \+ occur_check(S, T).
 
         % Si S non variables et T variable : orient
-            regle(S ?= T, orient) :- nonvar(S), var(T).
+            %regle(S ?= T, orient) :- nonvar(S), var(T).
+            regle(T ?= X, orient) :- var(X), \+ var(T).
 
         % Si même foncteur et même arité : decompose
             regle(S ?= T, decompose) :- compound(S), compound(T), functor(S, F, N), functor(T, F, N).
@@ -48,19 +51,19 @@ ligne.
             regle(S ?= T, clash) :- compound(S), compound(T), functor(S, F1, N1), functor(T, F2, N2), ( F1 \== F2 ; N1 \== N2 ).
 
         % Si variable = composé avec occurence : check
-            regle(S ?= T, check) :- var(S), compound(T), occur_check(S, T).
+            regle(S ?= T, check) :- var(S),compound(T), occur_check(S, T).
 
     % Transforme le système d'équations P en le système d'équations Q par application de la règle de transformation R à l'équation E.
 
         % delete : on enlève l'équation
-            reduit(delete, E, P, Q) :- select(E, P, Q).        % select supprime E dans P et mets le résultat dans Q
+            reduit(delete, _ ?= _, P, P).        % select(X,Y,Z) supprime x dans y et mets le résultat dans z
 
         % rename : on peut remplacer la variable S par T partout
-                    reduit(rename, S ?= T, P, Q) :- subst(S,T,P,Q).
-                % simplify : idem que rename
-                    reduit(simplify, S ?= T, P, Q) :- subst(S,T,P,Q).
+            reduit(rename, S ?= T, P, Q) :- S=T, subst(S,T,P,Q).
+        % simplify : idem que rename
+            reduit(simplify, S ?= T, P, Q) :-  S=T, subst(S,T,P,Q).
 
-                    reduit(expand, S ?= T, P, Q) :- subst(S, T, P, Q).
+            reduit(expand, S ?= T, P, Q) :- S=T, subst(S, T, P, Q ).
 
         % orient : échange S et T
             reduit(orient, T ?= S, P,[S ?= T | P]).
@@ -125,37 +128,20 @@ ligne.
     unifie(P) :- unifie(P, choix_premier).
 
     %unifie(P, Strategie) :- set_echo, unifie(P, [], Strategie).
-    %unifie(P, Strategie) :- unifie(P, [], Strategie).
+    unifie(P, Strategie) :- unifie(P, [], Strategie).
 
-    unifie(P, Strategie) :-
-        term_variables(P, Vars),
-        unifie_loop(P, [], Strategie, Vars).
+    unifie([],_, _) :-true.
 
-    %unifie([],Q, _) :- echo(Q), ligne, true.
-
-    unifie_loop([], _, _, Vars) :-
-        print_final(Vars),
-        write('Yes'), nl,
-        true.
-
-    unifie_loop(P, Q, Strategie, Vars) :-
+    unifie(P, Q, Strategie) :-
         choix(P, Q_rest, E, R, Strategie),
         echo('system : '), echo(P), ligne,
         echo(R), echo(': '), echo(E), ligne,
         reduit(R, E, Q_rest, S),
-        unifie_loop(S, Q, Strategie, Vars).
-
-   % unifie(P, Q, Strategie) :-
-    %    choix(P, Q_rest, E, R, Strategie),
-      %  echo('system : '), echo(P), ligne,
-     %   echo(R), echo(': '), echo(E), ligne,
-      %  reduit(R, E, Q_rest, S),
-       % unifie(S, Q, Strategie).
+        unifie(S, Q, Strategie).
 
     % Choix systématique de la première équation
     choix([E|Q_rest], Q_rest, E, R, choix_premier) :-
-        regle(E, R)->true;                                       % R = règle applicable à E
-        echo('check: '), echo(E), ligne,fail.
+        regle(E, R)->true;echo('check: '), echo(E), ligne,fail.                                        % R = règle applicable à E
 
     %implementation des 2 choix pondérée
     choix(P, Q_rest, E, R, choix_pondere_1) :- choix_pondere(P, Q_rest, E, R, 1).
@@ -214,33 +200,8 @@ ligne.
         clr_echo,               % désactiver l'affichage
         unifie(P, S).           % appeler ta version existante
 
-    % trace_unif(P, S) permet de faire l'unification avec affichage des différentes règles utiliser
+    % trace_unif(P, S) permet de faire l'unification sans afficher les différents règles utiliser
     trace_unif(P, S) :-
         set_echo,               % activer l'affichage
         unifie(P, S).           % appeler ta version existante
 
-
-% Impression finale des liaisons sous la forme "X = valeur"
-
-label_list(['X','Y','Z','U','V','W','T','S','R','Q','P','O','N','M','L','K','J','I','H','G','F','E','D','C','B','A']).
-
-label_for_index(I, LabelAtom) :-
-    label_list(L),
-    length(L, Len),
-    ( I < Len ->
-        nth0(I, L, Lab),
-        atom_string(LabelAtom, Lab)
-    ; K is I - Len + 1,
-      nth0(0, L, Base),
-      format(atom(LabelAtom), '~w~w', [Base, K])
-    ).
-
-print_final(Vars) :-
-    print_final_loop(Vars, 0).
-
-print_final_loop([], _).
-print_final_loop([V|VT], I) :-
-    label_for_index(I, Label),
-    write(Label), write(' = '), write(V), nl,
-    I1 is I + 1,
-    print_final_loop(VT, I1).
