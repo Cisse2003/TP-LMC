@@ -55,20 +55,12 @@ ligne.
         % delete : on enlève l'équation
             reduit(delete, E, P, Q) :- select(E, P, Q).        % select supprime E dans P et mets le résultat dans Q
 
-        % rename : on remplace la variable S par T partout
-        reduit(rename, S ?= T, P, [S = T | Q]) :-
-            select(S ?= T, P, P1),
-            substitute(P1, S, T, Q).
+        % rename : on peut remplacer la variable S par T partout
+                    reduit(rename, S ?= T, P, Q) :- subst(S,T,P,Q).
+                % simplify : idem que rename
+                    reduit(simplify, S ?= T, P, Q) :- subst(S,T,P,Q).
 
-        % simplify : même opération que rename (pour une variable ou un terme simple)
-        reduit(simplify, S ?= T, P, [S = T | Q]) :-
-            select(S ?= T, P, P1),
-            substitute(P1, S, T, Q).
-
-        % expand : substitution de X par T dans tout le problème
-        reduit(expand, X ?= T, P, [X = T | Q]) :-
-            select(X ?= T, P, P1),
-            substitute(P1, X, T, Q).
+                    reduit(expand, S ?= T, P, Q) :- subst(S, T, P, Q).
 
         % orient : échange S et T
             reduit(orient, T ?= S, P,[S ?= T | P]).
@@ -133,16 +125,32 @@ ligne.
     unifie(P) :- unifie(P, choix_premier).
 
     %unifie(P, Strategie) :- set_echo, unifie(P, [], Strategie).
-    unifie(P, Strategie) :- unifie(P, [], Strategie).
+    %unifie(P, Strategie) :- unifie(P, [], Strategie).
 
-    unifie([],Q, _) :- echo(Q), ligne, true.
+    unifie(P, Strategie) :-
+        term_variables(P, Vars),
+        unifie_loop(P, [], Strategie, Vars).
 
-    unifie(P, Q, Strategie) :-
+    %unifie([],Q, _) :- echo(Q), ligne, true.
+
+    unifie_loop([], _, _, Vars) :-
+        print_final(Vars),
+        write('Yes'), nl,
+        true.
+
+    unifie_loop(P, Q, Strategie, Vars) :-
         choix(P, Q_rest, E, R, Strategie),
         echo('system : '), echo(P), ligne,
         echo(R), echo(': '), echo(E), ligne,
         reduit(R, E, Q_rest, S),
-        unifie(S, Q, Strategie).
+        unifie_loop(S, Q, Strategie, Vars).
+
+   % unifie(P, Q, Strategie) :-
+    %    choix(P, Q_rest, E, R, Strategie),
+      %  echo('system : '), echo(P), ligne,
+     %   echo(R), echo(': '), echo(E), ligne,
+      %  reduit(R, E, Q_rest, S),
+       % unifie(S, Q, Strategie).
 
     % Choix systématique de la première équation
     choix([E|Q_rest], Q_rest, E, R, choix_premier) :-
@@ -211,3 +219,28 @@ ligne.
         set_echo,               % activer l'affichage
         unifie(P, S).           % appeler ta version existante
 
+
+% Impression finale des liaisons sous la forme "X = valeur"
+
+label_list(['X','Y','Z','U','V','W','T','S','R','Q','P','O','N','M','L','K','J','I','H','G','F','E','D','C','B','A']).
+
+label_for_index(I, LabelAtom) :-
+    label_list(L),
+    length(L, Len),
+    ( I < Len ->
+        nth0(I, L, Lab),
+        atom_string(LabelAtom, Lab)
+    ; K is I - Len + 1,
+      nth0(0, L, Base),
+      format(atom(LabelAtom), '~w~w', [Base, K])
+    ).
+
+print_final(Vars) :-
+    print_final_loop(Vars, 0).
+
+print_final_loop([], _).
+print_final_loop([V|VT], I) :-
+    label_for_index(I, Label),
+    write(Label), write(' = '), write(V), nl,
+    I1 is I + 1,
+    print_final_loop(VT, I1).
