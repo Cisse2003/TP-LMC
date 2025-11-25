@@ -213,10 +213,11 @@ start :-
     write('Voici comment l\'utiliser :'), nl,
     write('1. Pour unifier sans afficher les étapes :'), nl,
     write('   ?- unif([equations], Strategie).'), nl,
-    write('2. Pour unifier avec trace (affiche les règles appliquées) :'), nl,
+    write('   (Si vous ne donnez pas de strategie, la strategie par defaut est choix_premier)'), nl,
+    write('2. Pour unifier avec trace (affiche les regles appliquees) :'), nl,
     write('   ?- trace_unif([equations], Strategie).'), nl,
-    write('3. Les stratégies de choix possibles sont : choix_premier, choix_pondere_1, choix_pondere_2, choix_random'), nl,
-    write('   Exemple avec stratégie : ?- unifie([equations], choix_pondere_1).'), nl,
+    write('3. Les strategies de choix possibles sont : choix_premier, choix_pondere_1, choix_pondere_2, choix_random'), nl,
+    write('   Exemple avec strategie : ?- unif([equations], choix_pondere_1).'), nl,
     nl.
 
 
