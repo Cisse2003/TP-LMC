@@ -35,7 +35,7 @@ ligne.
 
 
         % Si T constante et S variable : simplify
-            regle(E, simplify) :- E = S ?= T, var(S),atomic(T), S \== T.
+            regle(S ?= T, simplify) :- var(S),atomic(T), S \== T.
 
         % Si T composé et S variable, sans occurence : expand
             regle(S ?= T, expand) :- var(S), compound(T), \+ occur_check(S, T).
